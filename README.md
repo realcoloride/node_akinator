@@ -12,10 +12,11 @@ If you like this project, please check out [Akinator](https://akinator.com)!
 
 ## Features
 
-* No dependencies (node-fetch)
-* Written in TypeScript and strongly typed
-* Very easy to use
-* Active development
+* 👌 No dependencies (only `node-fetch`)
+* ✅ Written in TypeScript and strongly typed
+* 🧸 Very easy to use
+* ⌚ Asynchronous requests
+* 🔁 Active development
 
 ## Installation
 
@@ -25,10 +26,43 @@ npm install node_akinator
 
 ## Usage
 
-Basic automated usage can be found in `example.ts`. But here is a friendly automated example:
+### Importing the package
 
+Typescript:
 ```typescript
-soon
+import { AkinatorClient, Languages, Themes, Answers } from 'node_akinator';
+```
+
+Javascript:
+```javascript
+const { AkinatorClient, Languages, Themes, Answers } = require("node_akinator");
+```
+
+### Example
+
+Basic automated usage:
+```typescript
+// create the client
+const akinator = new AkinatorClient(Languages.English, true, Themes.Character);
+
+// go into async
+(async() => {
+    // start the game
+    const start = await akinator.start();
+    console.log(start.question);
+
+    // let it run automatically until akinator won
+    while (!akinator.won) {
+        // answer yes all the time
+        const answer = await akinator.answer(Answers.Yes);
+        console.log(`(${answer.step}/100) ${answer.question}`);
+
+        // await akinator.back(); if you want to go back (correct)
+    }
+
+    // win result and extra information
+    console.log(akinator.winResult.name);
+})();
 ```
 
 ## Disclaimer
@@ -38,4 +72,6 @@ soon
 
 📜 If you use this API, you also bound to the terms of usage of their website.
 
-*(real)coloride - 2023-2024, Licensed MIT.*
+☕ **Want to support me?** You can send me a coffee on ko.fi: https://ko-fi.com/coloride. 
+
+*(real)coloride - 2024, Licensed MIT.*

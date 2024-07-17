@@ -344,4 +344,4 @@ class AkinatorClient {
     }
 }
 
-export default AkinatorClient;
+export { AkinatorClient, Languages, Themes, Answers };
