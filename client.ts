@@ -322,7 +322,7 @@ class AkinatorClient {
     async back(): Promise<AnswerResult> {
         if (this._step == "1") throw new Error("Cannot go any further.");
 
-        const url = "/answer";
+        const url = "/cancel_answer";
         const request = await this.#request(url, { 
             method: "POST",
             body: AkinatorClient.#createForm({
