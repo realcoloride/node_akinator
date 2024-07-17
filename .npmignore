@@ -1,2 +1,2 @@
-example.ts
-dist/example.js
+example*
+dist/example*

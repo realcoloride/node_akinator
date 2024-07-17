@@ -5,7 +5,7 @@
   "main": "dist/client.js",
   "types": "dist/client.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "npx tsc"
   },
   "author": "realcoloride",
   "license": "MIT",
