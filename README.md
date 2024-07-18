@@ -1,6 +1,6 @@
 # Akinator Unofficial Node API
 
-> Node.js client for the unofficial [Akinator game](https://akinator.com), an awesome genie that's able to guess any character in your mind!
+> Node.js client for the [Akinator game](https://akinator.com), an awesome genie that's able to guess any character in your mind!
 
 ## Intro
 
