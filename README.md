@@ -6,7 +6,7 @@
 
 This package was inspired by many akinator packages, including the python one, but the javascript versions were not good enough in my opinion or were not working.
 
-**This project is not affiiliated with Akinator in any way! It is a community project**
+**This project is not affiiliated with Akinator in any way! It is a community project.**
 
 If you like this project, please check out [Akinator](https://akinator.com)!
 
