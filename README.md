@@ -57,11 +57,21 @@ const akinator = new AkinatorClient(Languages.English, true, Themes.Character);
         const answer = await akinator.answer(Answers.Yes);
         console.log(`(${answer.step}/100) ${answer.question}`);
 
-        // await akinator.back(); if you want to go back (correct)
+        // wanna go back?
+        // await akinator.back();
     }
 
     // win result and extra information
     console.log(akinator.winResult.name);
+
+    // not satisfied? you can always continue. 
+    // use (akinator.ko) to know if he lost.
+    const answer = await akinator.continue();
+    console.log(`(${answer.step}/100) ${answer.question}`);
+
+    // OR maybe you're satisfied, 
+    // then tell akinator.
+    await akinator.submitWin();
 })();
 ```
 

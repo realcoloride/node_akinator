@@ -75,6 +75,10 @@ class AnswerResult {
      * Represents the currently asked question
      */
     question = "";
+    /**
+     * Represents if Akinator lost or not
+     */
+    ko = false;
 
     reset() {
         this.won = false;
@@ -82,6 +86,7 @@ class AnswerResult {
         this.step = 0;
         this.progression = 0;
         this.question = "";
+        this.ko = false;
     }
 }
 
@@ -89,7 +94,8 @@ class AkinatorClient {
     private _session = "";
     private _signature = "";
     private _url = "";
-
+    private _identifiant = "";
+    
     /**
      * The language Akinator will use
      */
@@ -117,6 +123,7 @@ class AkinatorClient {
     private _descriptionProposition = "";
     private _photo = "";
     private _pseudo = "";
+    private _flagPhoto = 0;
 
     private _currentAnswerResult = new AnswerResult();
     private _currentWinResult = new WinResult();
@@ -153,6 +160,10 @@ class AkinatorClient {
      * Represents if Akinator won or not
      */
     public get won() { return this.answerResult.won; }
+    /**
+     * Represents if Akinator lost or not
+     */
+    public get ko() { return this.answerResult.ko; }
 
     /**
      * Creates a new Akinator client.
@@ -186,8 +197,7 @@ class AkinatorClient {
         this.#resetResults();
         await this.#fetchRegion(this.language);
 
-        const url = "/game";
-        const request = await this.#request(url, { 
+        const request = await this.#request("/game", { 
             method: "POST",
             body: AkinatorClient.#createForm({
                 sid: this.#getThemeAsNumber(),
@@ -210,6 +220,10 @@ class AkinatorClient {
         const questionMatch = response.match(/<div class="bubble-body"><p class="question-text" id="question-label">(.*?)<\/p><\/div>/);
         if (questionMatch && questionMatch[1])
             this._question = questionMatch[1];
+        
+        const identifiantMatch = response.match(/localStorage\.setItem\('identifiant', '([^']+)'\);/);
+        if (identifiantMatch && identifiantMatch[1])
+            this._identifiant = identifiantMatch[1];
 
         this._progression = "0.00000";
         this._step = "0";
@@ -225,7 +239,10 @@ class AkinatorClient {
     #update(action: string, response: any) {
         if (action == "answer" || action == "back") {
             const { akitude, step, progression, question, completion } = response;
-            if (completion == "KO") return this._currentAnswerResult;
+            if (completion == "KO") {
+                this._currentAnswerResult.ko = true;
+                return this._currentAnswerResult;
+            }
 
             this._akitude = akitude;
             this._step = step;
@@ -240,13 +257,14 @@ class AkinatorClient {
             return this._currentAnswerResult;
         }
         
-        const { name_proposition, description_proposition, pseudo, photo } = response;
+        const { name_proposition, description_proposition, pseudo, photo, flag_photo } = response;
         
         this._nameProposition = name_proposition;
         this._descriptionProposition = description_proposition;
         this._pseudo = pseudo;
         this._photo = photo;
-        
+        this._flagPhoto = flag_photo;
+    
         this._currentWinResult.propositionId = Number.parseInt(this._idProposition);
         this._currentWinResult.basePropositionId = Number.parseInt(this._idBaseProposition);
         this._currentWinResult.submittedBy = this._pseudo;
@@ -289,8 +307,7 @@ class AkinatorClient {
      * @returns Question resulting this answer
      */
     async answer(answer: Answers) : Promise<AnswerResult> {
-        const url = "/answer";
-        const request = await this.#request(url, { 
+        const request = await this.#request("/answer", { 
             method: "POST",
             body: AkinatorClient.#createForm({
                 step: this._step,
@@ -322,8 +339,7 @@ class AkinatorClient {
     async back(): Promise<AnswerResult> {
         if (this._step == "1") throw new Error("Cannot go any further.");
 
-        const url = "/cancel_answer";
-        const request = await this.#request(url, { 
+        const request = await this.#request("/cancel_answer", { 
             method: "POST",
             body: AkinatorClient.#createForm({
                 step: this._step,
@@ -341,6 +357,63 @@ class AkinatorClient {
             throw new Error("HTTP Error: " + request.statusText);
 
         return this.#update("back", response) as AnswerResult;
+    }
+
+    
+    // https://en.akinator.com/exclude
+    /**
+     * Continues the game even if Akinator won
+     */
+    async continue() {
+        if (!this.won) throw new Error("You cannot continue a game that's ongoing.");
+        if (this.ko) throw new Error("You cannot continue because Akinator has lost.");
+
+        const request = await this.#request("/exclude", { 
+            method: "POST",
+            body: AkinatorClient.#createForm({
+                step: this._step,
+                sid: this.#getThemeAsNumber(),
+                cm: this.#getChildModeString(),
+                progression: this._progression,
+                session: this._session,
+                signature: this._signature
+            })
+        });
+
+        this._currentAnswerResult.won = false;
+
+        const response = await request.json();
+
+        if (request.status != 200)
+            throw new Error("HTTP Error: " + request.statusText);
+
+        return this.#update("back", response) as AnswerResult;
+    }
+
+    // https://en.akinator.com/choice
+    /**
+     * Tells Akinator he won
+     */
+    async submitWin() {
+        if (!this.won) throw new Error("You cannot submit Akinator's result while the game is ongoing.");
+
+        const request = await this.#request("/choice", { 
+            method: "POST",
+            body: AkinatorClient.#createForm({
+                sid: this.#getThemeAsNumber(),
+                pid: this._idProposition,
+                identifiant: this._identifiant,
+                pflag_photo: this._flagPhoto,
+                charac_name: this._nameProposition,
+                charac_desc: this._descriptionProposition,
+                session: this._session,
+                signature: this._signature,
+                step: this._step,
+            })
+        });
+
+        if (request.status != 302 && request.status != 200)
+            throw new Error("HTTP Error: " + request.statusText);
     }
 }
 
