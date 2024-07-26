@@ -337,7 +337,7 @@ class AkinatorClient {
      * @returns Previous question
      */
     async back(): Promise<AnswerResult> {
-        if (this._step == "1") throw new Error("Cannot go any further.");
+        if (this._step == "0") throw new Error("Cannot go any further.");
 
         const request = await this.#request("/cancel_answer", { 
             method: "POST",
